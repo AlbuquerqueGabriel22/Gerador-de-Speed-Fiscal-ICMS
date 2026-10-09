@@ -11,6 +11,26 @@ BASE_DIR = (
     if getattr(sys, 'frozen', False)
     else os.path.dirname(os.path.abspath(__file__))
 )
+
+
+def resolve_asset_path(nome_arquivo):
+    if getattr(sys, 'frozen', False):
+        candidatos = [
+            os.path.join(os.path.dirname(sys.executable), 'assets', nome_arquivo),
+            os.path.join(getattr(sys, '_MEIPASS', ''), 'assets', nome_arquivo),
+            os.path.join(getattr(sys, '_MEIPASS', ''), nome_arquivo),
+        ]
+        for candidato in candidatos:
+            if os.path.exists(candidato):
+                return candidato
+
+    caminho_local = os.path.join(BASE_DIR, 'assets', nome_arquivo)
+    if os.path.exists(caminho_local):
+        return caminho_local
+
+    return os.path.join(BASE_DIR, nome_arquivo)
+
+
 PASTA_SAIDA = os.path.join(BASE_DIR, 'downloads', 'arquivos')
 
 def somente_digitos(valor):
@@ -307,7 +327,7 @@ def gerar_arquivo(dados, caminhos_xml=None):
 
 def criar_interface():
     janela = tk.Tk()
-    logo_path = os.path.join(BASE_DIR, 'assets', 'logo.png')
+    logo_path = resolve_asset_path('logo.png')
     logo = None
     if os.path.exists(logo_path):
         try:

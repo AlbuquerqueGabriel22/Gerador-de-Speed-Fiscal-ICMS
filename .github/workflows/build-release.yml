@@ -1,0 +1,47 @@
+name: Build GenTXT EXE
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller
+
+      - name: Build do executável
+        shell: pwsh
+        run: |
+          pyinstaller --onefile --windowed --name "GenTXT" --icon "assets/app.ico" --add-data "assets;assets" gerador_sped_c100.py
+
+      - name: Enviar artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: GenTXT-windows
+          path: dist/GenTXT.exe
+
+      - name: Publicar no GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/GenTXT.exe
+          overwrite_files: true

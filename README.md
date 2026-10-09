@@ -26,6 +26,17 @@ Aplicativo desktop para gerar arquivos do SPED Fiscal (EFD ICMS/IPI) a partir do
 
 Também é possível executar pelo terminal com `python gerador_sped_c100.py`.
 
+## Build automático de release
+
+O projeto inclui um workflow do GitHub Actions em `.github/workflows/build-release.yml` que:
+
+- monta o executável para Windows com PyInstaller;
+- inclui a logo no ícone do arquivo `.exe` e na janela do aplicativo;
+- gera o artefato no GitHub Actions;
+- publica `GenTXT.exe` automaticamente em um release quando o código é enviado com uma tag no formato `v*`.
+
+Para disparar a build manualmente, use a ação **Run workflow** no GitHub.
+
 ## Observações
 
 - Os demais tipos de SPED ainda não possuem formulários nem geração de arquivos.
