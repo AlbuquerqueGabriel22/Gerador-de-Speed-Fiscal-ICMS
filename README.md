@@ -32,3 +32,5 @@ Também é possível executar pelo terminal com `python gerador_sped_c100.py`.
 - Os arquivos gerados devem ser conferidos no PVA correspondente antes da transmissão.
 - Arquivos XML, PDFs, capturas de tela e saídas locais são ignorados pelo Git para evitar publicar dados fiscais ou pessoais acidentalmente.
 - Nenhuma licença de uso ou redistribuição foi definida para o código.
+
+[⬇️ Baixar GenTXT para Windows](https://github.com/AlbuquerqueGabriel22/Gerador-de-Speed-Fiscal-ICMS/releases/latest/download/GenTXT.exe)

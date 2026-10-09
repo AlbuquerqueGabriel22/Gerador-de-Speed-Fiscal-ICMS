@@ -307,11 +307,26 @@ def gerar_arquivo(dados, caminhos_xml=None):
 
 def criar_interface():
     janela = tk.Tk()
+    logo_path = os.path.join(BASE_DIR, 'assets', 'logo.png')
+    logo = None
+    if os.path.exists(logo_path):
+        try:
+            logo = tk.PhotoImage(file=logo_path)
+            if hasattr(logo, 'subsample'):
+                logo = logo.subsample(4, 4)
+        except tk.TclError:
+            logo = None
+
     janela.title('GenTXT')
     janela.geometry('900x760')
     janela.minsize(760, 620)
     janela.resizable(True, True)
     janela.configure(bg='#292f36')
+    if logo is not None:
+        try:
+            janela.iconphoto(True, logo)
+        except tk.TclError:
+            pass
     estilo = ttk.Style(janela)
     if 'clam' in estilo.theme_names():
         estilo.theme_use('clam')
@@ -354,10 +369,19 @@ def criar_interface():
     menu = tk.Frame(janela, bg='#292f36', padx=42, pady=34)
     menu.pack(fill='both', expand=True)
 
-    tk.Label(
-        menu, text='GenTXT', bg='#292f36', fg='#f0f3f6',
-        font=('Segoe UI', 28, 'bold')
-    ).pack(anchor='w')
+    cabecalho_logo = tk.Frame(menu, bg='#292f36')
+    cabecalho_logo.pack(anchor='w')
+    if logo is not None:
+        tk.Label(cabecalho_logo, image=logo, bg='#292f36').pack(side='left')
+        tk.Label(
+            cabecalho_logo, text='GenTXT', bg='#292f36', fg='#f0f3f6',
+            font=('Segoe UI', 28, 'bold')
+        ).pack(side='left', padx=(12, 0), anchor='center')
+    else:
+        tk.Label(
+            cabecalho_logo, text='GenTXT', bg='#292f36', fg='#f0f3f6',
+            font=('Segoe UI', 28, 'bold')
+        ).pack(anchor='w')
     tk.Label(
         menu, text='Geradores de arquivos SPED', bg='#292f36', fg='#b1bac4',
         font=('Segoe UI', 12)
