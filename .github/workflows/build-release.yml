@@ -31,7 +31,7 @@ jobs:
       - name: Build do executável
         shell: pwsh
         run: |
-          pyinstaller --onefile --windowed --name "GenTXT" --icon "assets/app.ico" --add-data "assets;assets" gerador_sped_c100.py
+          pyinstaller --onefile --windowed --name "GenTXT" --icon "assets/app.ico" --add-data "assets/logo.png;assets" --add-data "assets/app.ico;assets" gerador_sped_c100.py
 
       - name: Enviar artefato
         uses: actions/upload-artifact@v4

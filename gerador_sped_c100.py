@@ -328,8 +328,8 @@ def gerar_arquivo(dados, caminhos_xml=None):
 def criar_interface():
     janela = tk.Tk()
     logo_path = resolve_asset_path('logo.png')
+    icone_path = resolve_asset_path('app.ico')
     logo = None
-    icone = None
     if os.path.exists(logo_path):
         try:
             logo = tk.PhotoImage(file=logo_path)
@@ -337,23 +337,17 @@ def criar_interface():
                 logo = logo.subsample(4, 4)
         except tk.TclError:
             logo = None
-    icone_path = resolve_asset_path('logo-icon.png')
     if os.path.exists(icone_path):
         try:
-            icone = tk.PhotoImage(file=icone_path).subsample(4, 4)
+            janela.iconbitmap(default=icone_path)
         except tk.TclError:
-            icone = None
+            pass
 
     janela.title('GenTXT')
     janela.geometry('900x760')
     janela.minsize(760, 620)
     janela.resizable(True, True)
     janela.configure(bg='#292f36')
-    if icone is not None:
-        try:
-            janela.iconphoto(True, icone)
-        except tk.TclError:
-            pass
     estilo = ttk.Style(janela)
     if 'clam' in estilo.theme_names():
         estilo.theme_use('clam')

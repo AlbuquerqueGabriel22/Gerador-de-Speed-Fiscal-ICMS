@@ -5,7 +5,7 @@ a = Analysis(
     ['gerador_sped_c100.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('assets', 'assets')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
