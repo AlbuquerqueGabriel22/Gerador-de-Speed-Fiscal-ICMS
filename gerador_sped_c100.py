@@ -1,13 +1,17 @@
 import os
 import re
+import sys
 import tkinter as tk
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
 
-PASTA_SAIDA = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), 'downloads', 'arquivos'
+BASE_DIR = (
+    os.path.dirname(sys.executable)
+    if getattr(sys, 'frozen', False)
+    else os.path.dirname(os.path.abspath(__file__))
 )
+PASTA_SAIDA = os.path.join(BASE_DIR, 'downloads', 'arquivos')
 
 def somente_digitos(valor):
     return re.sub(r'\D', '', valor or '')
@@ -459,7 +463,7 @@ def criar_interface():
             ('razao_social', 'Razão social *'), ('cnpj', 'CNPJ *'), ('ie', 'Inscrição estadual *'),
             ('uf', 'UF *'), ('municipio', 'Código município *'), ('im', 'Inscrição municipal'),
             ('cep', 'CEP'), ('endereco', 'Endereço'), ('numero', 'Número'),
-            ('complemento', 'Complemento'), ('bairro', 'Bairro'), ('telefone', 'Telefone'),('ituaçao','ituaçao')
+            ('complemento', 'Complemento'), ('bairro', 'Bairro'), ('telefone', 'Telefone'),
             ('email', 'E-mail'),
         ]),
         ('Período e configuração', [
