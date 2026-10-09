@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+
+# Dados fiscais locais e arquivos de exemplo podem conter dados pessoais.
+*.xml
+*.pdf
+SPEEDGERADOR.txt
+Screenshot_*.png
+dbfd6bc89a57f0b52fedd2b779eb55bd.jpg
+
+# Arquivos SPED gerados pelo aplicativo.
+downloads/arquivos/
