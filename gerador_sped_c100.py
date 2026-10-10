@@ -664,7 +664,7 @@ def criar_interface():
 
         dados_por_caminho = {}
         caminhos_por_item = {}
-        for indice, caminho in enumerate(xmls_selecionados):
+        def adicionar_xml_lista(caminho):
             try:
                 nota = ler_nfe(caminho)
                 dados_por_caminho[caminho] = nota
@@ -685,7 +685,7 @@ def criar_interface():
                 chave_acesso = 'Não foi possível ler'
                 tags = ('invalido',)
 
-            identificador = str(indice)
+            identificador = str(len(caminhos_por_item))
             caminhos_por_item[identificador] = caminho
             lista.insert(
                 '', 'end', iid=identificador,
@@ -694,6 +694,9 @@ def criar_interface():
                 ),
                 tags=tags
             )
+
+        for caminho in xmls_selecionados:
+            adicionar_xml_lista(caminho)
 
         detalhes_xml = ttk.Label(
             janela_xmls, text='Selecione uma NF-e para ver os detalhes.',
@@ -728,6 +731,29 @@ def criar_interface():
                 state='normal' if nota['chave'] else 'disabled'
             )
 
+        def adicionar_xmls():
+            novos_xmls = filedialog.askopenfilenames(
+                parent=janela_xmls,
+                title='Adicionar XMLs das NF-e',
+                filetypes=[('Arquivos XML', '*.xml'), ('Todos os arquivos', '*.*')]
+            )
+            chaves_caminhos = {
+                os.path.normcase(os.path.abspath(caminho))
+                for caminho in xmls_selecionados
+            }
+            for caminho in novos_xmls:
+                chave_caminho = os.path.normcase(os.path.abspath(caminho))
+                if chave_caminho in chaves_caminhos:
+                    continue
+                xmls_selecionados.append(caminho)
+                chaves_caminhos.add(chave_caminho)
+                adicionar_xml_lista(caminho)
+
+            quantidade = len(xmls_selecionados)
+            resumo_xmls.configure(text=f'Arquivos XML selecionados: {quantidade}')
+            xml_status.configure(text=f'{quantidade} NF-e XML selecionada(s).')
+            botao_ver_xmls.configure(state='normal' if quantidade else 'disabled')
+
         def copiar_chave():
             selecionados = lista.selection()
             if not selecionados:
@@ -759,16 +785,22 @@ def criar_interface():
             botao_excluir.configure(state='disabled')
             atualizar_detalhes()
 
+        barra_acoes = tk.Frame(janela_xmls, bg='#303740')
+        barra_acoes.grid(row=4, column=0, sticky='w', padx=18, pady=(0, 16))
         botao_excluir = ttk.Button(
-            janela_xmls, text='Excluir selecionado(s)',
+            barra_acoes, text='Excluir selecionado(s)',
             command=excluir_xmls_selecionados, style='GenTXT.TButton', state='disabled'
         )
-        botao_excluir.grid(row=4, column=0, sticky='w', padx=18, pady=(0, 16))
+        botao_excluir.pack(side='left', padx=(0, 10))
         botao_copiar_chave = ttk.Button(
-            janela_xmls, text='Copiar chave de acesso', command=copiar_chave,
+            barra_acoes, text='Copiar chave de acesso', command=copiar_chave,
             style='GenTXT.TButton', state='disabled'
         )
-        botao_copiar_chave.grid(row=4, column=0, sticky='w', padx=(190, 0), pady=(0, 16))
+        botao_copiar_chave.pack(side='left', padx=(0, 10))
+        ttk.Button(
+            barra_acoes, text='Adicionar XML', command=adicionar_xmls,
+            style='GenTXT.TButton'
+        ).pack(side='left')
         lista.bind(
             '<<TreeviewSelect>>', atualizar_detalhes
         )
