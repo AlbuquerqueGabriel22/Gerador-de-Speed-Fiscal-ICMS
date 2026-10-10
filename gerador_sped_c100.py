@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import tkinter as tk
+import webbrowser
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from tkinter import filedialog, messagebox, ttk
@@ -441,6 +442,22 @@ def criar_interface():
         menu, text='Os módulos marcados como “Em breve” ainda não geram arquivos.',
         bg='#292f36', fg='#a2abb5', font=('Segoe UI', 9)
     ).pack(anchor='w', pady=(18, 0))
+    links = tk.Frame(menu, bg='#292f36')
+    links.pack(anchor='w', pady=(14, 0))
+    for indice, (nome, url) in enumerate((
+        ('GitHub', 'https://github.com/AlbuquerqueGabriel22'),
+        ('LinkedIn', 'https://www.linkedin.com/in/gabriel-albuquerque-072641332/'),
+    )):
+        if indice:
+            tk.Label(links, text='•', bg='#292f36', fg='#a2abb5').pack(side='left', padx=8)
+        link = tk.Label(
+            links, text=nome, bg='#292f36', fg='#72c7df',
+            font=('Segoe UI', 10, 'underline'), cursor='hand2'
+        )
+        link.pack(side='left')
+        link.bind(
+            '<Button-1>', lambda _, endereco=url: webbrowser.open(endereco, new=2)
+        )
 
     formulario = ttk.Frame(janela, style='GenTXT.TFrame')
     formulario.grid_columnconfigure(0, weight=1)
@@ -558,15 +575,16 @@ def criar_interface():
         janela_xmls.grid_columnconfigure(0, weight=1)
         janela_xmls.grid_rowconfigure(1, weight=1)
 
-        ttk.Label(
+        resumo_xmls = ttk.Label(
             janela_xmls,
             text=f'Arquivos XML selecionados: {len(xmls_selecionados)}',
             style='GenTXT.TLabel'
-        ).grid(row=0, column=0, sticky='w', padx=18, pady=(16, 10))
+        )
+        resumo_xmls.grid(row=0, column=0, sticky='w', padx=18, pady=(16, 10))
 
         lista = ttk.Treeview(
             janela_xmls, columns=('arquivo', 'local'), show='headings',
-            style='GenTXT.Treeview'
+            style='GenTXT.Treeview', selectmode='extended'
         )
         lista.heading('arquivo', text='Arquivo')
         lista.heading('local', text='Localização')
@@ -580,6 +598,37 @@ def criar_interface():
         for caminho in xmls_selecionados:
             lista.insert('', 'end', values=(os.path.basename(caminho), caminho))
 
+        def excluir_xmls_selecionados():
+            caminhos_removidos = {
+                lista.item(item, 'values')[1] for item in lista.selection()
+            }
+            xmls_selecionados[:] = [
+                caminho for caminho in xmls_selecionados
+                if caminho not in caminhos_removidos
+            ]
+            for item in lista.selection():
+                lista.delete(item)
+
+            quantidade = len(xmls_selecionados)
+            resumo_xmls.configure(text=f'Arquivos XML selecionados: {quantidade}')
+            xml_status.configure(
+                text=f'{quantidade} NF-e XML selecionada(s).'
+                if quantidade else 'Nenhuma NF-e XML selecionada (opcional).'
+            )
+            botao_ver_xmls.configure(state='normal' if quantidade else 'disabled')
+            botao_excluir.configure(state='disabled')
+
+        botao_excluir = ttk.Button(
+            janela_xmls, text='Excluir selecionado(s)',
+            command=excluir_xmls_selecionados, style='GenTXT.TButton', state='disabled'
+        )
+        botao_excluir.grid(row=2, column=0, sticky='w', padx=18, pady=(0, 16))
+        lista.bind(
+            '<<TreeviewSelect>>',
+            lambda _: botao_excluir.configure(
+                state='normal' if lista.selection() else 'disabled'
+            )
+        )
         ttk.Button(
             janela_xmls, text='Fechar', command=janela_xmls.destroy,
             style='GenTXT.TButton'
