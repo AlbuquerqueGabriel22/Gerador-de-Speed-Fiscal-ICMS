@@ -354,6 +354,7 @@ def criar_interface():
         'GenTXT.TEntry', padding=(8, 7), fieldbackground='#262c33',
         foreground='#f0f3f6', insertcolor='#f0f3f6'
     )
+    estilo.map('GenTXT.TEntry', fieldbackground=[('focus', '#303740')])
     estilo.configure(
         'GenTXT.TButton', font=('Segoe UI', 10), padding=(12, 8),
         background='#48535f', foreground='#f0f3f6'
@@ -416,6 +417,8 @@ def criar_interface():
     grade = tk.Frame(menu, bg='#292f36')
     grade.pack(fill='x')
     for indice, (nome, descricao, disponivel) in enumerate(modulos):
+        cor_normal = '#39424d' if disponivel else '#323941'
+        cor_hover = '#465665' if disponivel else '#383f48'
         botao = tk.Button(
             grade,
             text=f'{nome}\n{descricao}',
@@ -426,9 +429,9 @@ def criar_interface():
             pady=16,
             width=34,
             height=3,
-            bg='#39424d' if disponivel else '#323941',
+            bg=cor_normal,
             fg='#f0f3f6' if disponivel else '#a2abb5',
-            activebackground="#003CFF",
+            activebackground='#34798b',
             activeforeground='#ffffff',
             font=('Segoe UI', 11, 'bold'),
             relief='solid',
@@ -436,6 +439,14 @@ def criar_interface():
             cursor='hand2',
         )
         botao.grid(row=indice // 2, column=indice % 2, padx=7, pady=7, sticky='nsew')
+        botao.bind(
+            '<Enter>',
+            lambda _, alvo=botao, cor=cor_hover: alvo.configure(background=cor)
+        )
+        botao.bind(
+            '<Leave>',
+            lambda _, alvo=botao, cor=cor_normal: alvo.configure(background=cor)
+        )
     grade.grid_columnconfigure(0, weight=1)
     grade.grid_columnconfigure(1, weight=1)
     tk.Label(
@@ -470,7 +481,7 @@ def criar_interface():
         cabecalho, text='←  Menu principal',
         command=lambda: (formulario.pack_forget(), menu.pack(fill='both', expand=True)),
         style='GenTXT.TButton'
-    ).grid(row=0, column=0, rowspan=2, sticky='w', padx=(0, 20))
+    ).grid(row=0, column=0, rowspan=3, sticky='w', padx=(0, 20))
     tk.Label(
         cabecalho, text='SPED Fiscal ICMS/IPI', bg='#252b32', fg='#f0f3f6',
         font=('Segoe UI', 17, 'bold')
@@ -479,6 +490,17 @@ def criar_interface():
         cabecalho, text='Preencha os dados da escrituração e gere seu arquivo.',
         bg='#252b32', fg='#b1bac4', font=('Segoe UI', 10)
     ).grid(row=1, column=1, sticky='w', pady=(2, 0))
+    indicadores_obrigatorios = tk.Frame(cabecalho, bg='#252b32')
+    indicadores_obrigatorios.grid(row=2, column=1, sticky='w', pady=(6, 0))
+    status_obrigatorios = tk.Label(
+        indicadores_obrigatorios, text='Obrigatórios: 0/7', bg='#252b32',
+        fg='#d4dae1', font=('Segoe UI', 9)
+    )
+    status_obrigatorios.pack(side='left')
+    progresso_obrigatorios = ttk.Progressbar(
+        indicadores_obrigatorios, maximum=7, length=180, mode='determinate'
+    )
+    progresso_obrigatorios.pack(side='left', padx=(12, 0))
 
     area = ttk.Frame(formulario, style='GenTXT.TFrame', padding=(24, 14, 24, 10))
     area.grid(row=1, column=0, sticky='nsew')
@@ -502,7 +524,23 @@ def criar_interface():
     rodape.grid(row=2, column=0, sticky='ew')
     rodape.grid_columnconfigure(1, weight=1)
     campos = {}
+    variaveis_campos = {}
     xmls_selecionados = []
+    chaves_obrigatorias = (
+        'razao_social', 'cnpj', 'ie', 'uf', 'municipio', 'data_inicio', 'data_fim'
+    )
+
+    def atualizar_progresso(*_):
+        quantidade = sum(
+            bool(variaveis_campos[chave].get().strip())
+            for chave in chaves_obrigatorias if chave in variaveis_campos
+        )
+        progresso_obrigatorios.configure(value=quantidade)
+        status_obrigatorios.configure(
+            text=f'Obrigatórios: {quantidade}/{len(chaves_obrigatorias)}'
+            + (' • Campos preenchidos' if quantidade == len(chaves_obrigatorias) else ''),
+            fg='#7ed3aa' if quantidade == len(chaves_obrigatorias) else '#d4dae1'
+        )
     
     grupos = [
         ('Dados da empresa', [
@@ -539,12 +577,18 @@ def criar_interface():
             ttk.Label(secao, text=rotulo, style='GenTXT.TLabel').grid(
                 row=linha, column=coluna, sticky='w', padx=(0, 8), pady=6
             )
-            entrada = ttk.Entry(secao, width=24, style='GenTXT.TEntry')
+            variavel = tk.StringVar()
+            entrada = ttk.Entry(
+                secao, width=24, style='GenTXT.TEntry', textvariable=variavel
+            )
             entrada.grid(row=linha, column=coluna + 1, sticky='ew', padx=(0, 14), pady=5)
             campos[chave] = entrada
+            variaveis_campos[chave] = variavel
+            variavel.trace_add('write', atualizar_progresso)
         
     campos['perfil'].insert(0, 'B')
     campos['atividade'].insert(0, '1')
+    atualizar_progresso()
 
     xml_status = ttk.Label(
         rodape, text='Nenhuma NF-e XML selecionada (opcional).', style='GenTXT.Footer.TLabel'
@@ -552,11 +596,20 @@ def criar_interface():
     xml_status.grid(row=0, column=1, sticky='w', padx=12)
 
     def selecionar_xmls():
-        xmls_selecionados.clear()
-        xmls_selecionados.extend(filedialog.askopenfilenames(
+        novos_xmls = filedialog.askopenfilenames(
             title='Selecione os XMLs das NF-e',
             filetypes=[('Arquivos XML', '*.xml'), ('Todos os arquivos', '*.*')]
-        ))
+        )
+        chaves_caminhos = {
+            os.path.normcase(os.path.abspath(caminho))
+            for caminho in xmls_selecionados
+        }
+        for caminho in novos_xmls:
+            chave_caminho = os.path.normcase(os.path.abspath(caminho))
+            if chave_caminho not in chaves_caminhos:
+                xmls_selecionados.append(caminho)
+                chaves_caminhos.add(chave_caminho)
+
         quantidade = len(xmls_selecionados)
         xml_status.configure(text=f'{quantidade} NF-e XML selecionada(s).')
         botao_ver_xmls.configure(state='normal' if quantidade else 'disabled')
@@ -568,8 +621,8 @@ def criar_interface():
 
         janela_xmls = tk.Toplevel(janela)
         janela_xmls.title('XMLs selecionados')
-        janela_xmls.geometry('760x400')
-        janela_xmls.minsize(520, 280)
+        janela_xmls.geometry('1080x500')
+        janela_xmls.minsize(760, 400)
         janela_xmls.configure(bg='#303740')
         janela_xmls.transient(janela)
         janela_xmls.grid_columnconfigure(0, weight=1)
@@ -583,30 +636,117 @@ def criar_interface():
         resumo_xmls.grid(row=0, column=0, sticky='w', padx=18, pady=(16, 10))
 
         lista = ttk.Treeview(
-            janela_xmls, columns=('arquivo', 'local'), show='headings',
+            janela_xmls, columns=('arquivo', 'data', 'valor', 'chave'), show='headings',
             style='GenTXT.Treeview', selectmode='extended'
         )
         lista.heading('arquivo', text='Arquivo')
-        lista.heading('local', text='Localização')
-        lista.column('arquivo', width=240, minwidth=160)
-        lista.column('local', width=440, minwidth=200)
+        lista.heading('data', text='Data de emissão')
+        lista.heading('valor', text='Valor da NF-e')
+        lista.heading('chave', text='Chave de acesso (44 dígitos)')
+        lista.column('arquivo', width=210, minwidth=150, anchor='w')
+        lista.column('data', width=110, minwidth=95, anchor='center')
+        lista.column('valor', width=130, minwidth=110, anchor='e')
+        lista.column('chave', width=380, minwidth=300, anchor='w')
         lista.grid(row=1, column=0, sticky='nsew', padx=(18, 0), pady=(0, 14))
         barra_xmls = ttk.Scrollbar(janela_xmls, orient='vertical', command=lista.yview)
         barra_xmls.grid(row=1, column=1, sticky='ns', padx=(0, 18), pady=(0, 14))
-        lista.configure(yscrollcommand=barra_xmls.set)
+        barra_xmls_horizontal = ttk.Scrollbar(
+            janela_xmls, orient='horizontal', command=lista.xview
+        )
+        barra_xmls_horizontal.grid(
+            row=2, column=0, sticky='ew', padx=18, pady=(0, 12)
+        )
+        lista.configure(
+            yscrollcommand=barra_xmls.set,
+            xscrollcommand=barra_xmls_horizontal.set
+        )
+        lista.tag_configure('invalido', foreground='#ff9c9c')
 
-        for caminho in xmls_selecionados:
-            lista.insert('', 'end', values=(os.path.basename(caminho), caminho))
+        dados_por_caminho = {}
+        caminhos_por_item = {}
+        for indice, caminho in enumerate(xmls_selecionados):
+            try:
+                nota = ler_nfe(caminho)
+                dados_por_caminho[caminho] = nota
+                data_emissao = (
+                    datetime.strptime(nota['data'], '%d%m%Y').strftime('%d/%m/%Y')
+                    if nota['data'] else 'Não informada'
+                )
+                valor_nota = (
+                    f'R$ {valor_sped(nota["valor"])}'
+                    if nota['valor'] else 'Não informado'
+                )
+                chave_acesso = nota['chave'] or 'Não informada'
+                tags = ()
+            except (ET.ParseError, OSError, ValueError) as erro_xml:
+                dados_por_caminho[caminho] = {'erro': str(erro_xml)}
+                data_emissao = 'XML inválido'
+                valor_nota = '—'
+                chave_acesso = 'Não foi possível ler'
+                tags = ('invalido',)
+
+            identificador = str(indice)
+            caminhos_por_item[identificador] = caminho
+            lista.insert(
+                '', 'end', iid=identificador,
+                values=(
+                    os.path.basename(caminho), data_emissao, valor_nota, chave_acesso
+                ),
+                tags=tags
+            )
+
+        detalhes_xml = ttk.Label(
+            janela_xmls, text='Selecione uma NF-e para ver os detalhes.',
+            style='GenTXT.TLabel', wraplength=1000
+        )
+        detalhes_xml.grid(row=3, column=0, columnspan=2, sticky='ew', padx=18, pady=(0, 12))
+
+        def atualizar_detalhes(_=None):
+            selecionados = lista.selection()
+            if not selecionados:
+                detalhes_xml.configure(text='Selecione uma NF-e para ver os detalhes.')
+                botao_copiar_chave.configure(state='disabled')
+                return
+
+            caminho = caminhos_por_item[selecionados[0]]
+            nota = dados_por_caminho[caminho]
+            if 'erro' in nota:
+                detalhes_xml.configure(
+                    text=f'Não foi possível ler {os.path.basename(caminho)}: {nota["erro"]}'
+                )
+                botao_copiar_chave.configure(state='disabled')
+                return
+
+            detalhes_xml.configure(
+                text=(
+                    f'NF-e {nota["numero"] or "—"} • Série {nota["serie"] or "—"}'
+                    f' • Participante: {nota["nome_part"] or "Não informado"}'
+                    f' • Chave: {nota["chave"] or "Não informada"}'
+                )
+            )
+            botao_copiar_chave.configure(
+                state='normal' if nota['chave'] else 'disabled'
+            )
+
+        def copiar_chave():
+            selecionados = lista.selection()
+            if not selecionados:
+                return
+            caminho = caminhos_por_item[selecionados[0]]
+            chave_acesso = dados_por_caminho[caminho].get('chave')
+            if chave_acesso:
+                janela_xmls.clipboard_clear()
+                janela_xmls.clipboard_append(chave_acesso)
+                detalhes_xml.configure(text='Chave de acesso copiada para a área de transferência.')
 
         def excluir_xmls_selecionados():
-            caminhos_removidos = {
-                lista.item(item, 'values')[1] for item in lista.selection()
-            }
+            itens_removidos = lista.selection()
+            caminhos_removidos = {caminhos_por_item[item] for item in itens_removidos}
             xmls_selecionados[:] = [
                 caminho for caminho in xmls_selecionados
                 if caminho not in caminhos_removidos
             ]
-            for item in lista.selection():
+            for item in itens_removidos:
                 lista.delete(item)
 
             quantidade = len(xmls_selecionados)
@@ -617,22 +757,31 @@ def criar_interface():
             )
             botao_ver_xmls.configure(state='normal' if quantidade else 'disabled')
             botao_excluir.configure(state='disabled')
+            atualizar_detalhes()
 
         botao_excluir = ttk.Button(
             janela_xmls, text='Excluir selecionado(s)',
             command=excluir_xmls_selecionados, style='GenTXT.TButton', state='disabled'
         )
-        botao_excluir.grid(row=2, column=0, sticky='w', padx=18, pady=(0, 16))
+        botao_excluir.grid(row=4, column=0, sticky='w', padx=18, pady=(0, 16))
+        botao_copiar_chave = ttk.Button(
+            janela_xmls, text='Copiar chave de acesso', command=copiar_chave,
+            style='GenTXT.TButton', state='disabled'
+        )
+        botao_copiar_chave.grid(row=4, column=0, sticky='w', padx=(190, 0), pady=(0, 16))
         lista.bind(
-            '<<TreeviewSelect>>',
-            lambda _: botao_excluir.configure(
-                state='normal' if lista.selection() else 'disabled'
-            )
+            '<<TreeviewSelect>>', atualizar_detalhes
         )
         ttk.Button(
             janela_xmls, text='Fechar', command=janela_xmls.destroy,
             style='GenTXT.TButton'
-        ).grid(row=2, column=0, sticky='e', padx=18, pady=(0, 16))
+        ).grid(row=4, column=0, sticky='e', padx=18, pady=(0, 16))
+        lista.bind(
+            '<<TreeviewSelect>>',
+            lambda _: botao_excluir.configure(
+                state='normal' if lista.selection() else 'disabled'
+            ), add='+'
+        )
 
     def gerar():
         dados = {chave: entrada.get().strip() for chave, entrada in campos.items()}
