@@ -31,7 +31,7 @@ Também é possível executar pelo terminal com `python gerador_sped_c100.py`.
 O projeto inclui um workflow do GitHub Actions em `.github/workflows/build-release.yml` que:
 
 - monta o executável para Windows com PyInstaller;
-- inclui a logo no ícone do arquivo `.exe` e na janela do aplicativo;
+- inclui o ícone do aplicativo no arquivo `.exe` e na janela do aplicativo;
 - gera o artefato no GitHub Actions;
 - publica `GenTXT.exe` automaticamente em um release quando o código é enviado com uma tag no formato `v*`.
 

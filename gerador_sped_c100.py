@@ -327,16 +327,7 @@ def gerar_arquivo(dados, caminhos_xml=None):
 
 def criar_interface():
     janela = tk.Tk()
-    logo_path = resolve_asset_path('logo.png')
     icone_path = resolve_asset_path('app.ico')
-    logo = None
-    if os.path.exists(logo_path):
-        try:
-            logo = tk.PhotoImage(file=logo_path)
-            if hasattr(logo, 'subsample'):
-                logo = logo.subsample(4, 4)
-        except tk.TclError:
-            logo = None
     if os.path.exists(icone_path):
         try:
             janela.iconbitmap(default=icone_path)
@@ -392,17 +383,10 @@ def criar_interface():
 
     cabecalho_logo = tk.Frame(menu, bg='#292f36')
     cabecalho_logo.pack(anchor='w')
-    if logo is not None:
-        tk.Label(cabecalho_logo, image=logo, bg='#292f36').pack(side='left')
-        tk.Label(
-            cabecalho_logo, text='GenTXT', bg='#292f36', fg='#f0f3f6',
-            font=('Segoe UI', 28, 'bold')
-        ).pack(side='left', padx=(12, 0), anchor='center')
-    else:
-        tk.Label(
-            cabecalho_logo, text='GenTXT', bg='#292f36', fg='#f0f3f6',
-            font=('Segoe UI', 28, 'bold')
-        ).pack(anchor='w')
+    tk.Label(
+        cabecalho_logo, text='GenTXT', bg='#292f36', fg='#f0f3f6',
+        font=('Segoe UI', 28, 'bold')
+    ).pack(anchor='w')
     tk.Label(
         menu, text='Geradores de arquivos SPED', bg='#292f36', fg='#b1bac4',
         font=('Segoe UI', 12)
