@@ -317,11 +317,12 @@ def gerar_efd(dados, caminhos_xml=None):
     
     return '\n'.join(linhas) + '\n'
 
-def gerar_arquivo(dados, caminhos_xml=None):
+def gerar_arquivo(dados, caminhos_xml=None, diretorio_saida=None):
     conteudo = gerar_efd(dados, caminhos_xml)
-    os.makedirs(PASTA_SAIDA, exist_ok=True)
+    diretorio_saida = diretorio_saida or PASTA_SAIDA
+    os.makedirs(diretorio_saida, exist_ok=True)
     periodo = f'{dados["data_inicio"][2:4]}_{dados["data_inicio"][4:]}'
-    caminho = os.path.join(PASTA_SAIDA, f'{nome_seguro(dados["razao_social"])}-SPED_FISCAL_{periodo}.txt')
+    caminho = os.path.join(diretorio_saida, f'{nome_seguro(dados["razao_social"])}-SPED_FISCAL_{periodo}.txt')
     with open(caminho, 'w', encoding='utf-8', newline='') as arquivo:
         arquivo.write(conteudo)
     return caminho
@@ -817,8 +818,17 @@ def criar_interface():
 
     def gerar():
         dados = {chave: entrada.get().strip() for chave, entrada in campos.items()}
+        diretorio_saida = filedialog.askdirectory(
+            parent=janela,
+            title='Escolha onde salvar o arquivo SPED Fiscal',
+            initialdir=PASTA_SAIDA if os.path.isdir(PASTA_SAIDA) else BASE_DIR,
+            mustexist=True
+        )
+        if not diretorio_saida:
+            return
+
         try:
-            caminho = gerar_arquivo(dados, xmls_selecionados)
+            caminho = gerar_arquivo(dados, xmls_selecionados, diretorio_saida)
             texto_xml = f'{len(xmls_selecionados)} NF-e(s) importada(s).' if xmls_selecionados else 'Nenhuma NF-e XML foi importada.'
             messagebox.showinfo('GenTXT - EFD gerada', f'Arquivo criado:\n\n{caminho}\n\n'
                                               f'{texto_xml}\n\nConfira o arquivo no PVA antes da transmissão.')
