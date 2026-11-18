@@ -8,7 +8,7 @@ Aplicativo desktop para gerar arquivos do SPED Fiscal (EFD ICMS/IPI) a partir do
 - Gerador SPED Fiscal ICMS/IPI disponível.
 - SPED Contribuições, ECF e ECD aparecem no menu como **Em breve**.
 - Importação opcional de arquivos XML de NF-e.
-- Arquivos gerados em `downloads/arquivos/`.
+- Escolha da pasta de destino ao gerar o arquivo SPED Fiscal.
 
 ## Requisitos
 
@@ -22,7 +22,7 @@ Aplicativo desktop para gerar arquivos do SPED Fiscal (EFD ICMS/IPI) a partir do
 2. Se necessário, instale o Python para Windows. Durante a instalação, mantenha o suporte a Tcl/Tk habilitado.
 3. Abra `abrir_gerador_sped.bat` na pasta extraída. O inicializador procura `pythonw.exe` nas instalações comuns do Python e abre a interface sem deixar uma janela do CMD aberta.
 4. Escolha **SPED Fiscal ICMS/IPI**, preencha os dados e, se quiser, selecione os XMLs das NF-e.
-5. O arquivo gerado será salvo em `downloads/arquivos/`.
+5. Ao gerar o arquivo, escolha a pasta onde deseja salvar o SPED Fiscal.
 
 Também é possível executar pelo terminal com `python gerador_sped_c100.py`.
 
